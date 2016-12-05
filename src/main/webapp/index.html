@@ -1,25 +1,97 @@
-<!DOCTYPE html>
 <html>
 <head>
-	<title>Tomcat Web Starter Application</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<link rel="stylesheet" href="style.css" />
+<title>Movie Reputation</title>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+   <script src="https://code.highcharts.com/highcharts.js"></script>  
 </head>
 <body>
-	<table>
-		<tr>
-			<td style='width: 30%;'>
-				<img class = "newappIcon" src='images/newapp-icon.png'>
-			</td>
-			<td>
-				<!-- The "Hello World!" message comes from /SimpleServlet -->
-				<h1 id = "message"></h1>
+	<h1>Movie sentiments based on online reviews</h1>
+<div style="margin:15px">
+<select name="dropdown" id="movie_name_id" onchange="show_movie();">
+<option value="Jackie" selected>Jackie</option>
+<option value="Moana">Moana</option>
+<option value="Trolls">Trolls</option>
+<option value="Doctor%20Strange">Doctor Strange</option>
+<option value="Fantastic%20Beasts%20And%20Where%20To%20Find%20Them">Fantastic Beasts And Where To Find Them</option>
+</select>
+</div>
+<div id="number_chart_title" style="text-align: center; font-family: Lucida Grande, Lucida Sans Unicode, Arial, Helvetica, sans-serif; font-size: 27px; font-weight: bold"></div>
+<div id="container" style="width: 550px; height: 400px; margin: 0 auto"></div>
+<div id="container1" style="width: 550px; height: 400px; margin: 0 auto"></div>
+
+
+<script language="JavaScript">
+
+
+
+   var chart = {
+       plotBackgroundColor: null,
+       plotBorderWidth: null,
+       plotShadow: false
+   };
+   var title = {
+      text: 'Movie sentiments based on online reviews'   
+   };      
+   var tooltip = {
+      pointFormat: '{series.name} : <b>{point.percentage:.1f}%</b> ({point.y})'
+   };
+   var plotOptions = {
+      pie: {
+         allowPointSelect: true,
+         cursor: 'pointer',
+         dataLabels: {
+            enabled: false           
+         },
+         showInLegend: true
+      }
+   };
+
+function show_movie(){
+	var url = 'http://127.0.0.1:5000/api/mentions/' + document.getElementById("movie_name_id").value;
+	    $.getJSON(url, function(data) {
+		var json = {};
+		json.chart = chart;
+
+		var series = [{     
+			type: 'pie',
+			name: 'Reviews',
+			data: []
+		}];
+		var series_data0 = [];
+		var series_data1 = [];
+		
+		var number_chart_title = document.getElementById("number_chart_title");
+		number_chart_title.innerHTML = data['movie_name'];
 				
-				<p class='description'></p> Thanks for creating a <span class="blue">Tomcat Starter Application</span>.
-			</td>
-		</tr>
-	</table>
-	<!-- Call SimpleServlet to get the "Hello World" message  -->
-	<script type="text/javascript" src="index.js"></script>
+		json.title = { text: 'Total number of reviews' };
+		for (var item in data.reputation){
+			series_data0.push([item, data['reputation'][item].count]);
+			series_data1.push([item, Math.abs(data['reputation'][item].score / data['reputation'][item].count)]);
+			
+		}
+
+		json.tooltip = tooltip;
+		series[0].data = series_data0;		
+		json.series = series;
+		json.plotOptions = plotOptions;
+		$('#container').highcharts(json);
+		
+		json.title = { text: 'Weighted average of reviews' };
+		series[0].data = series_data1;		
+		json.series = series;
+		json.plotOptions = plotOptions;
+		$('#container1').highcharts(json);
+		
+  });
+}
+
+$(function () {
+
+	$(document).ready(function () {
+		show_movie();
+	});
+});	
+</script>
+
 </body>
 </html>
